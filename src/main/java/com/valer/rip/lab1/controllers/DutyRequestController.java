@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.valer.rip.lab1.dto.DutyRequestDTO;
-import com.valer.rip.lab1.models.DutyRequest;
 import com.valer.rip.lab1.services.DutyRequestService;
 
 @RestController

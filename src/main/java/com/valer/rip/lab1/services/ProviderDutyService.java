@@ -114,11 +114,26 @@ public class ProviderDutyService {
         }
     }
 
+    // @Transactional
+    // public ProviderDuty createProviderDuty(ProviderDuty providerDuty) throws Exception {
+    //     try {
+    //         // ProviderDuty providerDuty = new ProviderDuty();
+    //         // modelMapper.map(providerDutyDTO, providerDuty);
+    //         return providerDutyRepository.save(providerDuty);
+    //     } 
+    //     catch (DataIntegrityViolationException e) {
+    //         throw new Exception("Ошибка целостности данных: возможно, такая услуга уже существует:");
+    //     } 
+    //     catch (Exception e) {
+    //         throw new Exception("Произошла ошибка при сохранении услуги");
+    //     }
+    // }
+
     @Transactional
-    public ProviderDuty createProviderDuty(ProviderDuty providerDuty) throws Exception {
+    public ProviderDuty createProviderDuty(ProviderDutyDTO providerDutyDTO) throws Exception {
         try {
-            // ProviderDuty providerDuty = new ProviderDuty();
-            // modelMapper.map(providerDutyDTO, providerDuty);
+            ProviderDuty providerDuty = new ProviderDuty();
+            modelMapper.map(providerDutyDTO, providerDuty);
             return providerDutyRepository.save(providerDuty);
         } 
         catch (DataIntegrityViolationException e) {

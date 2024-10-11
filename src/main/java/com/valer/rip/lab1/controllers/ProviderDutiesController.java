@@ -35,7 +35,7 @@ public class ProviderDutiesController {
     }
 
     @GetMapping("/{dutyID}")
-    public ResponseEntity<? extends Object> getProviderDutyById(@PathVariable("dutyID") int dutyID) {
+    public ResponseEntity<?> getProviderDutyById(@PathVariable("dutyID") int dutyID) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.getProviderDutyById(dutyID));
         }
@@ -44,11 +44,22 @@ public class ProviderDutiesController {
         }
     }
 
+    // @PostMapping("/create")
+    // public ResponseEntity<? extends Object> createProviderDuty(@ModelAttribute ProviderDuty providerDuty) {
+    //     try {
+    //         // ProviderDuty providerDuty = providerDutyService.createProviderDuty(providerDuty);
+    //         return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.createProviderDuty(providerDuty));
+    //     }
+    //     catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    //     }
+    // }
+
     @PostMapping("/create")
-    public ResponseEntity<? extends Object> createProviderDuty(@ModelAttribute ProviderDuty providerDuty) {
+    public ResponseEntity<?> createProviderDuty(@ModelAttribute ProviderDutyDTO providerDutyDTO) {
         try {
             // ProviderDuty providerDuty = providerDutyService.createProviderDuty(providerDuty);
-            return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.createProviderDuty(providerDuty));
+            return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.createProviderDuty(providerDutyDTO));
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -97,26 +108,4 @@ public class ProviderDutiesController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при добавлении/изменении изображения услуги: " + e.getMessage());
         }
     }
-
-    // @DeleteMapping("/{dutyID}/{requestID}/delete")
-    // public ResponseEntity<String> deleteProviderDutyFromConnectionRequest(@PathVariable("dutyID") int dutyID, @PathVariable("requestID") int requestID) {
-    //     try {
-    //         providerDutyService.deleteProviderDutyFromConnectionRequest(dutyID, requestID);
-    //         return ResponseEntity.status(HttpStatus.OK).body("Услуга с ID = " + dutyID + " успешно удалена из заявки с ID = " + requestID);
-    //     } 
-    //     catch (Exception e) {
-    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при удалении услуги с ID = " + dutyID + "из заявки c ID = " + requestID + ": " + e.getMessage());
-    //     }
-    // }
-
-    // @PutMapping("/{dutyID}/{requestID}/update-amount")
-    // public ResponseEntity<? extends Object> updateAmountInDutyRequest(@PathVariable("dutyID") int dutyID, @PathVariable("requestID") int requestID, @RequestParam("amount") int amount) {
-    //     try {
-    //         DutyRequest updatedDutyRequest = providerDutyService.updateAmountInDutyRequest(dutyID, requestID, amount);
-    //         return ResponseEntity.status(HttpStatus.OK).body(updatedDutyRequest);
-    //     } 
-    //     catch (Exception e) {
-    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при изменении поля amount услуги с ID = " + dutyID + "в заявке c ID = " + requestID + ": " + e.getMessage());
-    //     }
-    // }
 }

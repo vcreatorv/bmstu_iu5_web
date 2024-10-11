@@ -24,7 +24,7 @@ public class ProviderDuty {
     @Column(unique = true, length = 255, nullable = false)
     private String title;
 
-    @Column(name = "img_url", length = 255, nullable = false)
+    @Column(name = "img_url", length = 255)
     private String imgUrl;
 
     @Column(columnDefinition = "text", nullable = false)
