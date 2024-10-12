@@ -74,32 +74,32 @@ public class ProviderDutyService {
         modelMapper.createTypeMap(ProviderDuty.class, ProviderDutyDTO.class);
     }
 
-    @Transactional(readOnly = true)
-    public Map<String, Object> getAllProviderDuties(String titleFilter) {
-        User user = userService.findById(userService.getUserID()).get();
-        Optional<ConnectionRequest> connectionRequestOpt = connectionRequestRepository.findByClientAndStatus(user, "DRAFT");
+    // @Transactional(readOnly = true)
+    // public Map<String, Object> getAllProviderDuties(String titleFilter) {
+    //     User user = userService.findById(userService.getUserID()).get();
+    //     Optional<ConnectionRequest> connectionRequestOpt = connectionRequestRepository.findByClientAndStatus(user, "DRAFT");
         
-        Map<String, Object> response = new HashMap<>();
-        response.put("cartSize", 0);
-        response.put("connectionRequestID", 0);
+    //     Map<String, Object> response = new HashMap<>();
+    //     response.put("cartSize", 0);
+    //     response.put("connectionRequestID", 0);
 
-        if(connectionRequestOpt.isPresent()) {
-            response.put("connectionRequestID", connectionRequestOpt.get().getId());
-            response.put("cartSize", dutyRequestRepository.findByConnectionRequestEquals(connectionRequestOpt.get()).size());
-        }
+    //     if(connectionRequestOpt.isPresent()) {
+    //         response.put("connectionRequestID", connectionRequestOpt.get().getId());
+    //         response.put("cartSize", dutyRequestRepository.findByConnectionRequestEquals(connectionRequestOpt.get()).size());
+    //     }
 
-        List<ProviderDuty> providerDuties = new ArrayList<>();
-        if (titleFilter != null) {
-            providerDuties = providerDutyRepository.findByTitleOrderById(titleFilter);
-        }
-        else{
-            providerDuties = providerDutyRepository.findByActiveTrueOrderById();
-        }
+    //     List<ProviderDuty> providerDuties = new ArrayList<>();
+    //     if (titleFilter != null) {
+    //         providerDuties = providerDutyRepository.findByTitleOrderById(titleFilter);
+    //     }
+    //     else{
+    //         providerDuties = providerDutyRepository.findByActiveTrueOrderById();
+    //     }
        
-        response.put("providerDuties", providerDuties);
+    //     response.put("providerDuties", providerDuties);
         
-        return response;
-    }
+    //     return response;
+    // }
 
     @Transactional(readOnly = true)
     public ProviderDuty getProviderDutyById(int dutyID) throws Exception {
@@ -191,39 +191,39 @@ public class ProviderDutyService {
         return parts[parts.length - 1];
     }
 
-    @Transactional
-    public ConnectionRequestDTO addProviderDutyToRequest(int dutyID) throws Exception {
-        User user = userService.findById(userService.getUserID())
-                .orElseThrow(() -> new Exception("Пользователь не найден"));
+    // @Transactional
+    // public ConnectionRequestDTO addProviderDutyToRequest(int dutyID) throws Exception {
+    //     User user = userService.findById(userService.getUserID())
+    //             .orElseThrow(() -> new Exception("Пользователь не найден"));
 
-        ProviderDuty providerDuty = providerDutyRepository.findById(dutyID)
-                .orElseThrow(() -> new Exception("Услуга не найдена"));
+    //     ProviderDuty providerDuty = providerDutyRepository.findById(dutyID)
+    //             .orElseThrow(() -> new Exception("Услуга не найдена"));
 
-        ConnectionRequest request = connectionRequestRepository.findByClientAndStatus(user, "DRAFT")
-                .orElseGet(() -> {
-                    ConnectionRequest newRequest = new ConnectionRequest();
-                    newRequest.setClient(user);
-                    newRequest.setStatus("DRAFT");
-                    newRequest.setCreationDatetime(LocalDateTime.now());
-                    return connectionRequestRepository.save(newRequest);
-                });
+    //     ConnectionRequest request = connectionRequestRepository.findByClientAndStatus(user, "DRAFT")
+    //             .orElseGet(() -> {
+    //                 ConnectionRequest newRequest = new ConnectionRequest();
+    //                 newRequest.setClient(user);
+    //                 newRequest.setStatus("DRAFT");
+    //                 newRequest.setCreationDatetime(LocalDateTime.now());
+    //                 return connectionRequestRepository.save(newRequest);
+    //             });
 
-        List<DutyRequest> dutyRequests = dutyRequestRepository.findByConnectionRequestEquals(request);
+    //     List<DutyRequest> dutyRequests = dutyRequestRepository.findByConnectionRequestEquals(request);
 
-        boolean dutyExists = dutyRequests.stream()
-                .anyMatch(dr -> dr.getProviderDuty().getId() == dutyID);
+    //     boolean dutyExists = dutyRequests.stream()
+    //             .anyMatch(dr -> dr.getProviderDuty().getId() == dutyID);
 
-        if (!dutyExists) {
-            DutyRequest dutyRequest = new DutyRequest();
-            dutyRequest.setProviderDuty(providerDuty);
-            dutyRequest.setConnectionRequest(request);
-            dutyRequest.setAmount(1);
-            dutyRequestRepository.save(dutyRequest);
-            return connectionRequestService.convertToDTO(connectionRequestRepository.save(request), true);
-        }
+    //     if (!dutyExists) {
+    //         DutyRequest dutyRequest = new DutyRequest();
+    //         dutyRequest.setProviderDuty(providerDuty);
+    //         dutyRequest.setConnectionRequest(request);
+    //         dutyRequest.setAmount(1);
+    //         dutyRequestRepository.save(dutyRequest);
+    //         return connectionRequestService.convertToDTO(connectionRequestRepository.save(request), true);
+    //     }
 
-        return connectionRequestService.convertToDTO(request, true);
-    }
+    //     return connectionRequestService.convertToDTO(request, true);
+    // }
 
     @Transactional
     public ProviderDuty addImageToProviderDuty(int dutyID, MultipartFile image) throws Exception {

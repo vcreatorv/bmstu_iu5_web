@@ -72,13 +72,13 @@ public class ConnectionRequestController {
         }
     }
 
-    @PutMapping("/{requestID}/resolve")
-    public ResponseEntity<?> closeConnectionRequest(@PathVariable int requestID, @RequestParam("status") String status) {
-        try {
-            ConnectionRequestDTO closedRequest = connectionRequestService.closeConnectionRequest(requestID, status);
-            return ResponseEntity.status(HttpStatus.OK).body(closedRequest);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
+    // @PutMapping("/{requestID}/resolve")
+    // public ResponseEntity<?> closeConnectionRequest(@PathVariable int requestID, @RequestParam("status") String status) {
+    //     try {
+    //         ConnectionRequestDTO closedRequest = connectionRequestService.closeConnectionRequest(requestID, status);
+    //         return ResponseEntity.status(HttpStatus.OK).body(closedRequest);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    //     }
+    // }
 }

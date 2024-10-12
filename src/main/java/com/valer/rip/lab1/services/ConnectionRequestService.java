@@ -130,26 +130,26 @@ public class ConnectionRequestService {
         }
     }
 
-    @Transactional
-    public ConnectionRequestDTO closeConnectionRequest(int requestID, String status) throws Exception {
-        ConnectionRequest connectionRequest = connectionRequestRepository.findById(requestID)
-                .orElseThrow(() -> new Exception("Заявка на подключение с ID " + requestID + " не найдена"));
+    // @Transactional
+    // public ConnectionRequestDTO closeConnectionRequest(int requestID, String status) throws Exception {
+    //     ConnectionRequest connectionRequest = connectionRequestRepository.findById(requestID)
+    //             .orElseThrow(() -> new Exception("Заявка на подключение с ID " + requestID + " не найдена"));
 
-        if (!"FORMED".equals(connectionRequest.getStatus())) {
-            throw new Exception("Заявка не сформирована");
-        }
+    //     if (!"FORMED".equals(connectionRequest.getStatus())) {
+    //         throw new Exception("Заявка не сформирована");
+    //     }
 
-        int userID = userService.getUserID();
-        User user = userService.findById(userID).get();
-        connectionRequest.setManager(user);
+    //     int userID = userService.getUserID();
+    //     User user = userService.findById(userID).get();
+    //     connectionRequest.setManager(user);
 
-        connectionRequest.setStatus(status);
-        connectionRequest.setCompletionDatetime(LocalDateTime.now());
-        connectionRequest.setTotalPrice(countTotalPrice(connectionRequest));
+    //     connectionRequest.setStatus(status);
+    //     connectionRequest.setCompletionDatetime(LocalDateTime.now());
+    //     connectionRequest.setTotalPrice(countTotalPrice(connectionRequest));
         
-        ConnectionRequest updatedRequest = connectionRequestRepository.save(connectionRequest);
-        return convertToDTO(updatedRequest, false);
-    }
+    //     ConnectionRequest updatedRequest = connectionRequestRepository.save(connectionRequest);
+    //     return convertToDTO(updatedRequest, false);
+    // }
 
     public int countTotalPrice(ConnectionRequest connectionRequest) {
         List<DutyRequest> dutyRequestList =  dutyRequestRepository.findByConnectionRequestEquals(connectionRequest);

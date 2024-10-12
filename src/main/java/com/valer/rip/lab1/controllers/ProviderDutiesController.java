@@ -29,10 +29,10 @@ public class ProviderDutiesController {
         this.providerDutyService = providerDutyService;
     }
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllProviderDuties(@RequestParam(required = false) String title) {
-        return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.getAllProviderDuties(title));
-    }
+    // @GetMapping
+    // public ResponseEntity<Map<String, Object>> getAllProviderDuties(@RequestParam(required = false) String title) {
+    //     return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.getAllProviderDuties(title));
+    // }
 
     @GetMapping("/{dutyID}")
     public ResponseEntity<?> getProviderDutyById(@PathVariable("dutyID") int dutyID) {
@@ -88,15 +88,15 @@ public class ProviderDutiesController {
         }
     }
 
-    @PostMapping("/{dutyID}/add")
-    public ResponseEntity<?> addProviderDutyToRequest(@PathVariable("dutyID") int dutyID) {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.addProviderDutyToRequest(dutyID));
-        } 
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка при добавлении услуги в заявку: " + e.getMessage());
-        }
-    }
+    // @PostMapping("/{dutyID}/add")
+    // public ResponseEntity<?> addProviderDutyToRequest(@PathVariable("dutyID") int dutyID) {
+    //     try {
+    //         return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.addProviderDutyToRequest(dutyID));
+    //     } 
+    //     catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка при добавлении услуги в заявку: " + e.getMessage());
+    //     }
+    // }
 
     @PostMapping("/{dutyID}/image")
     public ResponseEntity<String> addImageToProviderDuty(@PathVariable("dutyID") int dutyID, @RequestParam("file") MultipartFile file) {
