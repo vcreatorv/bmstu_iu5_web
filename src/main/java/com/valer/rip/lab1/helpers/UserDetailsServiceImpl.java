@@ -23,11 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
 
         logger.debug("Запуск метода loadUserByUsername...");
-        User user = userRepository.findByLogin(login);
-        if(user == null){
-            logger.error("Пользователь не найден: " + login);
-            throw new UsernameNotFoundException("Не удалось найти пользователя...");
-        }
+        User user = userRepository.findByLogin(login).orElseThrow(() -> new UsernameNotFoundException("Не удалось найти пользователя..."));
         logger.info("Пользователь прошел аутентификацию!");
         return new CustomUserDetails(user);
     }

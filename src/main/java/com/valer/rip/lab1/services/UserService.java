@@ -92,13 +92,8 @@ package com.valer.rip.lab1.services;
 // }
 
 
-import jakarta.servlet.http.HttpServletRequest;
-
-import org.checkerframework.checker.units.qual.A;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -112,18 +107,22 @@ import com.valer.rip.lab1.dto.AuthRequestDTO;
 import com.valer.rip.lab1.dto.JwtResponseDTO;
 import com.valer.rip.lab1.dto.UserDTO;
 import com.valer.rip.lab1.helpers.Role;
+import com.valer.rip.lab1.models.ConnectionRequest;
 import com.valer.rip.lab1.models.User;
+import com.valer.rip.lab1.repositories.ConnectionRequestRepository;
 import com.valer.rip.lab1.repositories.UserRepository;
 
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
+
 
 @Service
 public class UserService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    ConnectionRequestRepository connectionRequestRepository;
 
     @Autowired
     JwtService jwtService;
@@ -181,11 +180,13 @@ public class UserService {
         return userResponse;
     }
 
-    public UserDTO getLoggedInUserProfile() {
+    public UserDTO getLoggedInUserProfile() throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetail = (UserDetails) authentication.getPrincipal();
         String usernameFromAccessToken = userDetail.getUsername();
-        User user = userRepository.findByLogin(usernameFromAccessToken);
+        User user = userRepository.findByLogin(usernameFromAccessToken)
+            .orElseThrow(() -> new Exception("Пользователь не найден!"));
+
         UserDTO userResponse = modelMapper.map(user, UserDTO.class);
         userResponse.setRole(user.getRole().name());
         return userResponse;
@@ -220,6 +221,12 @@ public class UserService {
     public String logout(HttpServletRequest request) {
         tokenBlacklistService.addToBlacklist(request);
         return "Logged out successfully";
+    }
+
+    public boolean isOwnerOfRequest(int requestId, String username) {
+        ConnectionRequest request = connectionRequestRepository.findById(requestId)
+            .orElseThrow(() -> new RuntimeException("Request not found"));
+        return request.getClient().getLogin().equals(username);
     }
 
 }

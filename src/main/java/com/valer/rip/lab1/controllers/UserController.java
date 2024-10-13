@@ -64,24 +64,26 @@ package com.valer.rip.lab1.controllers;
 //     }
 // }
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.valer.rip.lab1.dto.AuthRequestDTO;
 import com.valer.rip.lab1.dto.JwtResponseDTO;
+import com.valer.rip.lab1.dto.UserDTO;
 import com.valer.rip.lab1.services.UserService;
 
-import java.util.List;
-
-import com.valer.rip.lab1.dto.UserDTO;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
 
 
 @RestController
 @RequestMapping("/api/users")
+@SecurityRequirement(name = "Bearer Authentication")
 public class UserController {
 
     @Autowired
@@ -90,8 +92,7 @@ public class UserController {
     @PostMapping(value = "/save")
     public ResponseEntity saveUser(@ModelAttribute UserDTO userRequest) {
         try {
-            UserDTO userResponse = userService.saveUser(userRequest);
-            return ResponseEntity.ok(userResponse);
+            return ResponseEntity.ok(userService.saveUser(userRequest));
         } 
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -99,13 +100,12 @@ public class UserController {
     }
 
     @PostMapping("/profile")
-    public ResponseEntity<UserDTO> getUserProfile() {
+    public ResponseEntity<?> getUserProfile() {
         try {
-            UserDTO userResponse = userService.getLoggedInUserProfile();
-            return ResponseEntity.ok().body(userResponse);
+            return ResponseEntity.ok().body(userService.getLoggedInUserProfile());
         } 
         catch (Exception e){
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 

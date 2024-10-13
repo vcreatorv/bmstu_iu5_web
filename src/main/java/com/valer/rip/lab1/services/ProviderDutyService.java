@@ -24,6 +24,7 @@ import com.valer.rip.lab1.models.User;
 import com.valer.rip.lab1.repositories.ConnectionRequestRepository;
 import com.valer.rip.lab1.repositories.DutyRequestRepository;
 import com.valer.rip.lab1.repositories.ProviderDutyRepository;
+import com.valer.rip.lab1.repositories.UserRepository;
 
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -38,7 +39,7 @@ public class ProviderDutyService {
     private final ConnectionRequestRepository connectionRequestRepository;
     private final ConnectionRequestService connectionRequestService;
     private final DutyRequestRepository dutyRequestRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final MinioClient minioClient;
     private final MinioConfig minioConfig;
     private final ModelMapper modelMapper;
@@ -48,7 +49,7 @@ public class ProviderDutyService {
                                 ConnectionRequestRepository connectionRequestRepository, 
                                 DutyRequestRepository dutyRequestRepository,
                                 ConnectionRequestService connectionRequestService,
-                                UserService userService,
+                                UserRepository userRepository,
                                 MinioClient minioClient,
                                 MinioConfig minioConfig, 
                                 ModelMapper modelMapper) {
@@ -57,7 +58,7 @@ public class ProviderDutyService {
         this.dutyRequestRepository = dutyRequestRepository;
         this.connectionRequestService = connectionRequestService;
         this.minioClient = minioClient;
-        this.userService = userService;
+        this.userRepository = userRepository;
         this.minioConfig = minioConfig;
         this.modelMapper = modelMapper;
     }
@@ -74,32 +75,34 @@ public class ProviderDutyService {
         modelMapper.createTypeMap(ProviderDuty.class, ProviderDutyDTO.class);
     }
 
-    // @Transactional(readOnly = true)
-    // public Map<String, Object> getAllProviderDuties(String titleFilter) {
-    //     User user = userService.findById(userService.getUserID()).get();
-    //     Optional<ConnectionRequest> connectionRequestOpt = connectionRequestRepository.findByClientAndStatus(user, "DRAFT");
-        
-    //     Map<String, Object> response = new HashMap<>();
-    //     response.put("cartSize", 0);
-    //     response.put("connectionRequestID", 0);
+    @Transactional(readOnly = true)
+    public Map<String, Object> getAllProviderDuties(String titleFilter, String username) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("cartSize", 0);
+        response.put("connectionRequestID", 0);
 
-    //     if(connectionRequestOpt.isPresent()) {
-    //         response.put("connectionRequestID", connectionRequestOpt.get().getId());
-    //         response.put("cartSize", dutyRequestRepository.findByConnectionRequestEquals(connectionRequestOpt.get()).size());
-    //     }
+        if (username != null) {
+            User user = userRepository.findByLogin(username)
+                    .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+            ConnectionRequest connectionRequest = connectionRequestRepository.findFirstByClientAndStatus(user, "DRAFT").orElse(null);
 
-    //     List<ProviderDuty> providerDuties = new ArrayList<>();
-    //     if (titleFilter != null) {
-    //         providerDuties = providerDutyRepository.findByTitleOrderById(titleFilter);
-    //     }
-    //     else{
-    //         providerDuties = providerDutyRepository.findByActiveTrueOrderById();
-    //     }
-       
-    //     response.put("providerDuties", providerDuties);
+            if(connectionRequest != null) {
+                response.put("connectionRequestID", connectionRequest.getId());
+                response.put("cartSize", dutyRequestRepository.findByConnectionRequestEquals(connectionRequest).size());
+            }
+        }
+
+        List<ProviderDuty> providerDuties;
+        if (titleFilter != null) {
+            providerDuties = providerDutyRepository.findByTitleOrderById(titleFilter);
+        } else {
+            providerDuties = providerDutyRepository.findByActiveTrueOrderById();
+        }
+    
+        response.put("providerDuties", providerDuties);
         
-    //     return response;
-    // }
+        return response;
+    }
 
     @Transactional(readOnly = true)
     public ProviderDuty getProviderDutyById(int dutyID) throws Exception {
@@ -114,26 +117,11 @@ public class ProviderDutyService {
         }
     }
 
-    // @Transactional
-    // public ProviderDuty createProviderDuty(ProviderDuty providerDuty) throws Exception {
-    //     try {
-    //         // ProviderDuty providerDuty = new ProviderDuty();
-    //         // modelMapper.map(providerDutyDTO, providerDuty);
-    //         return providerDutyRepository.save(providerDuty);
-    //     } 
-    //     catch (DataIntegrityViolationException e) {
-    //         throw new Exception("Ошибка целостности данных: возможно, такая услуга уже существует:");
-    //     } 
-    //     catch (Exception e) {
-    //         throw new Exception("Произошла ошибка при сохранении услуги");
-    //     }
-    // }
-
     @Transactional
-    public ProviderDuty createProviderDuty(ProviderDutyDTO providerDutyDTO) throws Exception {
+    public ProviderDuty createProviderDuty(ProviderDuty providerDuty) throws Exception {
         try {
-            ProviderDuty providerDuty = new ProviderDuty();
-            modelMapper.map(providerDutyDTO, providerDuty);
+            // ProviderDuty providerDuty = new ProviderDuty();
+            // modelMapper.map(providerDutyDTO, providerDuty);
             return providerDutyRepository.save(providerDuty);
         } 
         catch (DataIntegrityViolationException e) {
@@ -143,6 +131,21 @@ public class ProviderDutyService {
             throw new Exception("Произошла ошибка при сохранении услуги");
         }
     }
+
+    // @Transactional
+    // public ProviderDuty createProviderDuty(ProviderDutyDTO providerDutyDTO) throws Exception {
+    //     try {
+    //         ProviderDuty providerDuty = new ProviderDuty();
+    //         modelMapper.map(providerDutyDTO, providerDuty);
+    //         return providerDutyRepository.save(providerDuty);
+    //     } 
+    //     catch (DataIntegrityViolationException e) {
+    //         throw new Exception("Ошибка целостности данных: возможно, такая услуга уже существует:");
+    //     } 
+    //     catch (Exception e) {
+    //         throw new Exception("Произошла ошибка при сохранении услуги");
+    //     }
+    // }
 
     @Transactional
     public ProviderDuty updateProviderDuty(int dutyID, ProviderDutyDTO providerDutyDTO) throws Exception {
@@ -191,39 +194,39 @@ public class ProviderDutyService {
         return parts[parts.length - 1];
     }
 
-    // @Transactional
-    // public ConnectionRequestDTO addProviderDutyToRequest(int dutyID) throws Exception {
-    //     User user = userService.findById(userService.getUserID())
-    //             .orElseThrow(() -> new Exception("Пользователь не найден"));
+    @Transactional
+    public ConnectionRequestDTO addProviderDutyToRequest(int dutyID, String username) throws Exception {
+        User user = userRepository.findByLogin(username)
+                .orElseThrow(() -> new Exception("Пользователь не найден"));
 
-    //     ProviderDuty providerDuty = providerDutyRepository.findById(dutyID)
-    //             .orElseThrow(() -> new Exception("Услуга не найдена"));
+        ProviderDuty providerDuty = providerDutyRepository.findById(dutyID)
+                .orElseThrow(() -> new Exception("Услуга не найдена"));
 
-    //     ConnectionRequest request = connectionRequestRepository.findByClientAndStatus(user, "DRAFT")
-    //             .orElseGet(() -> {
-    //                 ConnectionRequest newRequest = new ConnectionRequest();
-    //                 newRequest.setClient(user);
-    //                 newRequest.setStatus("DRAFT");
-    //                 newRequest.setCreationDatetime(LocalDateTime.now());
-    //                 return connectionRequestRepository.save(newRequest);
-    //             });
+        ConnectionRequest request = connectionRequestRepository.findFirstByClientAndStatus(user, "DRAFT")
+                .orElseGet(() -> {
+                    ConnectionRequest newRequest = new ConnectionRequest();
+                    newRequest.setClient(user);
+                    newRequest.setStatus("DRAFT");
+                    newRequest.setCreationDatetime(LocalDateTime.now());
+                    return connectionRequestRepository.save(newRequest);
+                });
 
-    //     List<DutyRequest> dutyRequests = dutyRequestRepository.findByConnectionRequestEquals(request);
+        List<DutyRequest> dutyRequests = dutyRequestRepository.findByConnectionRequestEquals(request);
 
-    //     boolean dutyExists = dutyRequests.stream()
-    //             .anyMatch(dr -> dr.getProviderDuty().getId() == dutyID);
+        boolean dutyExists = dutyRequests.stream()
+                .anyMatch(dr -> dr.getProviderDuty().getId() == dutyID);
 
-    //     if (!dutyExists) {
-    //         DutyRequest dutyRequest = new DutyRequest();
-    //         dutyRequest.setProviderDuty(providerDuty);
-    //         dutyRequest.setConnectionRequest(request);
-    //         dutyRequest.setAmount(1);
-    //         dutyRequestRepository.save(dutyRequest);
-    //         return connectionRequestService.convertToDTO(connectionRequestRepository.save(request), true);
-    //     }
+        if (!dutyExists) {
+            DutyRequest dutyRequest = new DutyRequest();
+            dutyRequest.setProviderDuty(providerDuty);
+            dutyRequest.setConnectionRequest(request);
+            dutyRequest.setAmount(1);
+            dutyRequestRepository.save(dutyRequest);
+            return connectionRequestService.convertToDTO(connectionRequestRepository.save(request), true);
+        }
 
-    //     return connectionRequestService.convertToDTO(request, true);
-    // }
+        return connectionRequestService.convertToDTO(request, true);
+    }
 
     @Transactional
     public ProviderDuty addImageToProviderDuty(int dutyID, MultipartFile image) throws Exception {
@@ -254,41 +257,6 @@ public class ProviderDutyService {
     public ProviderDutyDTO convertToDTO(ProviderDuty providerDuty) {
         return modelMapper.map(providerDuty, ProviderDutyDTO.class);
     }
-
-    // @Transactional
-    // public void deleteProviderDutyFromConnectionRequest(int dutyID, int requestID) throws Exception {
-    //     ConnectionRequest connectionRequest = connectionRequestRepository.findById(requestID)
-    //             .orElseThrow(() -> new Exception("Заявка на подключение с ID " + requestID + " не найдена"));
-        
-    //     if ("COMPLETED".equals(connectionRequest.getStatus()) || "REJECTED".equals(connectionRequest.getStatus()) || "DELETED".equals(connectionRequest.getStatus())) {
-    //         throw new Exception("Нельзя удалить услуги из завершенной или отклоненной заявки");
-    //     }
-
-    //     ProviderDuty providerDuty = providerDutyRepository.findById(dutyID)
-    //             .orElseThrow(() -> new Exception("Услуга с ID " + dutyID + " не найдена"));
-
-    //     dutyRequestRepository.deleteByConnectionRequestAndProviderDuty(connectionRequest, providerDuty);
-    // }
-
-
-    // @Transactional
-    // public DutyRequest updateAmountInDutyRequest(int dutyID, int requestID, int amount) throws Exception {
-    //     ConnectionRequest connectionRequest = connectionRequestRepository.findById(requestID)
-    //             .orElseThrow(() -> new Exception("Заявка на подключение с ID " + requestID + " не найдена"));
-        
-    //     if ("COMPLETED".equals(connectionRequest.getStatus()) || "REJECTED".equals(connectionRequest.getStatus()) || "DELETED".equals(connectionRequest.getStatus())) {
-    //         throw new Exception("Нельзя удалить услуги из завершенной или отклоненной заявки");
-    //     }
-
-    //     ProviderDuty providerDuty = providerDutyRepository.findById(dutyID)
-    //             .orElseThrow(() -> new Exception("Услуга с ID " + dutyID + " не найдена"));
-
-    //     DutyRequest dutyRequest = dutyRequestRepository.findByConnectionRequestAndProviderDuty(connectionRequest, providerDuty)
-    //         .orElseThrow(() -> new Exception("Заявки с такой услугой не существует"));
-        
-    //     dutyRequest.setAmount(amount);
-    //     return dutyRequest;
-    // }
 
 
     private String getFileExtension(String fileName) {

@@ -2,6 +2,7 @@ package com.valer.rip.lab1.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,8 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.valer.rip.lab1.dto.DutyRequestDTO;
 import com.valer.rip.lab1.services.DutyRequestService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/duties-requests")
+@SecurityRequirement(name = "Bearer Authentication")
 public class DutyRequestController {
 
     private final DutyRequestService dutyRequestService;
@@ -23,6 +27,7 @@ public class DutyRequestController {
     }
    
     @DeleteMapping("/{dutyID}/{requestID}/delete")
+    @PreAuthorize("hasAuthority('BUYER') and @userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<String> deleteProviderDutyFromConnectionRequest(@PathVariable("dutyID") int dutyID, @PathVariable("requestID") int requestID) {
         try {
             dutyRequestService.deleteProviderDutyFromConnectionRequest(dutyID, requestID);
@@ -44,6 +49,7 @@ public class DutyRequestController {
     //     }
     // }
     @PutMapping("/{dutyID}/{requestID}/update")
+    @PreAuthorize("hasAuthority('BUYER') and @userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<?> updateAmountInDutyRequest(@PathVariable("dutyID") int dutyID, 
                                                     @PathVariable("requestID") int requestID, 
                                                     @RequestParam("amount") int amount) {

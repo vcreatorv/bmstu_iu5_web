@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.Converter;
-
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +19,7 @@ import com.valer.rip.lab1.models.DutyRequest;
 import com.valer.rip.lab1.models.User;
 import com.valer.rip.lab1.repositories.ConnectionRequestRepository;
 import com.valer.rip.lab1.repositories.DutyRequestRepository;
+import com.valer.rip.lab1.repositories.UserRepository;
 
 import jakarta.annotation.PostConstruct;
 
@@ -27,15 +28,15 @@ import jakarta.annotation.PostConstruct;
 public class ConnectionRequestService {
     private final ConnectionRequestRepository connectionRequestRepository;
     private final DutyRequestRepository dutyRequestRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
     public ConnectionRequestService(ConnectionRequestRepository connectionRequestRepository, 
-                                    UserService userService,
+                                    UserRepository userRepository,
                                     DutyRequestRepository dutyRequestRepository,
                                     ModelMapper modelMapper) {
         this.connectionRequestRepository = connectionRequestRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
         this.dutyRequestRepository = dutyRequestRepository;
         this.modelMapper = modelMapper;
     }
@@ -130,26 +131,40 @@ public class ConnectionRequestService {
         }
     }
 
-    // @Transactional
-    // public ConnectionRequestDTO closeConnectionRequest(int requestID, String status) throws Exception {
-    //     ConnectionRequest connectionRequest = connectionRequestRepository.findById(requestID)
-    //             .orElseThrow(() -> new Exception("Заявка на подключение с ID " + requestID + " не найдена"));
+    @Transactional
+    public ConnectionRequestDTO closeConnectionRequest(int requestID, String status) throws Exception {
+        ConnectionRequest connectionRequest = connectionRequestRepository.findById(requestID)
+                .orElseThrow(() -> new Exception("Заявка на подключение с ID " + requestID + " не найдена"));
 
-    //     if (!"FORMED".equals(connectionRequest.getStatus())) {
-    //         throw new Exception("Заявка не сформирована");
-    //     }
+        if (!"FORMED".equals(connectionRequest.getStatus())) {
+            throw new Exception("Заявка не сформирована");
+        }
 
-    //     int userID = userService.getUserID();
-    //     User user = userService.findById(userID).get();
-    //     connectionRequest.setManager(user);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userLogin = authentication.getName();
+        User user = userRepository.findByLogin(userLogin).orElseThrow(() -> new Exception("Пользователь не найден!"));
 
-    //     connectionRequest.setStatus(status);
-    //     connectionRequest.setCompletionDatetime(LocalDateTime.now());
-    //     connectionRequest.setTotalPrice(countTotalPrice(connectionRequest));
+        connectionRequest.setManager(user);
+
+        connectionRequest.setStatus(status);
+        connectionRequest.setCompletionDatetime(LocalDateTime.now());
+        connectionRequest.setTotalPrice(countTotalPrice(connectionRequest));
         
-    //     ConnectionRequest updatedRequest = connectionRequestRepository.save(connectionRequest);
-    //     return convertToDTO(updatedRequest, false);
-    // }
+        ConnectionRequest updatedRequest = connectionRequestRepository.save(connectionRequest);
+        return convertToDTO(updatedRequest, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConnectionRequestDTO> getConnectionRequestsByUsername(String username) {
+        User user = userRepository.findByLogin(username)
+            .orElseThrow(() -> new RuntimeException("Пользователь не найден!"));
+
+        List<ConnectionRequest> requests = connectionRequestRepository.findByClient(user);
+        
+        return requests.stream()
+            .map(request -> convertToDTO(request, true))
+            .collect(Collectors.toList());
+    }
 
     public int countTotalPrice(ConnectionRequest connectionRequest) {
         List<DutyRequest> dutyRequestList =  dutyRequestRepository.findByConnectionRequestEquals(connectionRequest);

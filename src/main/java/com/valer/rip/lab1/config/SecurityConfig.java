@@ -19,11 +19,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.valer.rip.lab1.helpers.UserDetailsServiceImpl;
 
-/**
- * @author mhmdz
- * Created By Zeeshan on 20-05-2023
- * @project oauth-jwt
- */
+
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -43,7 +40,8 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests((authorize) -> authorize
-                                .requestMatchers("/api/users/save", "/api/users/login").permitAll()
+                                .requestMatchers("/api/users/save", "/api/users/login", "/api/provider-duties").permitAll()
+                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

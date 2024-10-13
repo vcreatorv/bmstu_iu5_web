@@ -4,6 +4,10 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -19,8 +23,11 @@ import com.valer.rip.lab1.dto.ProviderDutyDTO;
 import com.valer.rip.lab1.models.ProviderDuty;
 import com.valer.rip.lab1.services.ProviderDutyService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/provider-duties")
+@SecurityRequirement(name = "Bearer Authentication")
 public class ProviderDutiesController {
 
     private final ProviderDutyService providerDutyService;
@@ -29,10 +36,12 @@ public class ProviderDutiesController {
         this.providerDutyService = providerDutyService;
     }
 
-    // @GetMapping
-    // public ResponseEntity<Map<String, Object>> getAllProviderDuties(@RequestParam(required = false) String title) {
-    //     return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.getAllProviderDuties(title));
-    // }
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllProviderDuties(@RequestParam(required = false) String title) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth != null && !(auth instanceof AnonymousAuthenticationToken) ? auth.getName() : null;
+        return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.getAllProviderDuties(title, username));
+    }
 
     @GetMapping("/{dutyID}")
     public ResponseEntity<?> getProviderDutyById(@PathVariable("dutyID") int dutyID) {
@@ -44,29 +53,32 @@ public class ProviderDutiesController {
         }
     }
 
-    // @PostMapping("/create")
-    // public ResponseEntity<? extends Object> createProviderDuty(@ModelAttribute ProviderDuty providerDuty) {
-    //     try {
-    //         // ProviderDuty providerDuty = providerDutyService.createProviderDuty(providerDuty);
-    //         return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.createProviderDuty(providerDuty));
-    //     }
-    //     catch (Exception e) {
-    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    //     }
-    // }
-
     @PostMapping("/create")
-    public ResponseEntity<?> createProviderDuty(@ModelAttribute ProviderDutyDTO providerDutyDTO) {
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
+    public ResponseEntity<? extends Object> createProviderDuty(@ModelAttribute ProviderDuty providerDuty) {
         try {
             // ProviderDuty providerDuty = providerDutyService.createProviderDuty(providerDuty);
-            return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.createProviderDuty(providerDutyDTO));
+            return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.createProviderDuty(providerDuty));
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
+    // @PostMapping("/create")
+    // @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
+    // public ResponseEntity<?> createProviderDuty(@ModelAttribute ProviderDutyDTO providerDutyDTO) {
+    //     try {
+    //         // ProviderDuty providerDuty = providerDutyService.createProviderDuty(providerDuty);
+    //         return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.createProviderDuty(providerDutyDTO));
+    //     }
+    //     catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    //     }
+    // }
+
     @PutMapping("/{dutyID}/update")
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<?> updateProviderDuty(@PathVariable("dutyID") int dutyID, @ModelAttribute ProviderDutyDTO providerDutyDTO) {
         try {
             ProviderDuty updatedDuty = providerDutyService.updateProviderDuty(dutyID, providerDutyDTO);
@@ -78,6 +90,7 @@ public class ProviderDutiesController {
     }
 
     @DeleteMapping("{dutyID}/delete")
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<String> deleteProviderDuty(@PathVariable("dutyID") int dutyID) {
         try{
             providerDutyService.deleteProviderDuty(dutyID);
@@ -88,17 +101,19 @@ public class ProviderDutiesController {
         }
     }
 
-    // @PostMapping("/{dutyID}/add")
-    // public ResponseEntity<?> addProviderDutyToRequest(@PathVariable("dutyID") int dutyID) {
-    //     try {
-    //         return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.addProviderDutyToRequest(dutyID));
-    //     } 
-    //     catch (Exception e) {
-    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка при добавлении услуги в заявку: " + e.getMessage());
-    //     }
-    // }
+    @PostMapping("/{dutyID}/add")
+    public ResponseEntity<?> addProviderDutyToRequest(@PathVariable("dutyID") int dutyID) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.addProviderDutyToRequest(dutyID, auth.getName()));
+        } 
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка при добавлении услуги в заявку: " + e.getMessage());
+        }
+    }
 
     @PostMapping("/{dutyID}/image")
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<String> addImageToProviderDuty(@PathVariable("dutyID") int dutyID, @RequestParam("file") MultipartFile file) {
         try {
             providerDutyService.addImageToProviderDuty(dutyID, file);
