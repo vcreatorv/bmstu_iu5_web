@@ -93,6 +93,7 @@ package com.valer.rip.lab1.services;
 
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -112,6 +113,7 @@ import com.valer.rip.lab1.models.User;
 import com.valer.rip.lab1.repositories.ConnectionRequestRepository;
 import com.valer.rip.lab1.repositories.UserRepository;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 
 
@@ -136,97 +138,116 @@ public class UserService {
     @Autowired
     ModelMapper modelMapper;
 
+    @PostConstruct
+    public void setupMapper() {
+        modelMapper.getConfiguration().setSkipNullEnabled(true).setMatchingStrategy(MatchingStrategies.STRICT);
 
+        modelMapper.typeMap(UserDTO.class, User.class)
+            .addMappings(mapper -> mapper.map(src -> src.getRole() != null ? Role.valueOf(src.getRole()) : Role.BUYER, User::setRole));
 
-    public UserDTO saveUser(UserDTO userRequest) throws Exception {
-        if(userRequest.getLogin() == null){
-            throw new RuntimeException("Не удалось найти параметр login в запросе!");
-        } 
-        else if(userRequest.getPassword() == null){
-            throw new RuntimeException("Не удалось найти параметр pasword в запросе!");
+        modelMapper.typeMap(User.class, UserDTO.class)
+            .addMappings(mapper -> mapper.map(User::getRole, (dest, v) -> {
+                if (v == null) {
+                    dest.setRole(Role.BUYER.name());
+                } else {
+                    dest.setRole(((Role) v).name());
+                }
+            }));
+    }
+
+    public UserDTO createUser(UserDTO userRequest) throws Exception {
+        if(userRequest.getLogin() == null || userRequest.getPassword() == null){
+            throw new Exception("Параметры login и password не могут быть пустыми!");
         }
-
-        User savedUser = null;
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String rawPassword = userRequest.getPassword();
-        String encodedPassword = encoder.encode(rawPassword);
 
         User user = modelMapper.map(userRequest, User.class);
-        
-        if (userRequest.getRole() == null) {
-            user.setRole(Role.valueOf("BUYER"));
-        }
-        else {
-            user.setRole(Role.valueOf(userRequest.getRole()));
-        }
-        user.setPassword(encodedPassword);
-        if(userRequest.getId() != 0) {
-            User oldUser = userRepository.findById(userRequest.getId())
-            .orElseThrow(() -> new Exception("Can't find record with identifier: " + userRequest.getId()));
-            
-            oldUser.setId(user.getId());
-            oldUser.setPassword(user.getPassword());
-            oldUser.setLogin(user.getLogin());
-            oldUser.setRole(user.getRole());
 
-            savedUser = userRepository.save(oldUser);
-        } 
-        else {
-            savedUser = userRepository.save(user);
-        }
+        // if (userRequest.getRole() == null) {
+        //     user.setRole(Role.valueOf("BUYER"));
+        // }
+        // else {
+        //     user.setRole(Role.valueOf(userRequest.getRole()));
+        // }
+        user.setPassword(encodePassword(userRequest.getPassword()));
 
+        User savedUser = userRepository.save(user);
         UserDTO userResponse = modelMapper.map(savedUser, UserDTO.class);
-        userResponse.setRole(user.getRole().name());
+        //userResponse.setRole(user.getRole().name());
         return userResponse;
     }
 
-    public UserDTO getLoggedInUserProfile() throws Exception {
+    public UserDTO updateUser(UserDTO userRequest) throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetail = (UserDetails) authentication.getPrincipal();
-        String usernameFromAccessToken = userDetail.getUsername();
-        User user = userRepository.findByLogin(usernameFromAccessToken)
-            .orElseThrow(() -> new Exception("Пользователь не найден!"));
-
-        UserDTO userResponse = modelMapper.map(user, UserDTO.class);
-        userResponse.setRole(user.getRole().name());
-        return userResponse;
-    }
-
-    public UserDTO getUserById(int id) throws Exception {
+        String username = userDetail.getUsername();
         
-        if (id == 0) {
-            throw new IllegalArgumentException("Id cannot be null");
+        User currentUser = userRepository.findByLogin(username).orElseThrow(() -> new Exception("Пользователь не найден!"));
+
+        if (userRequest.getPassword() != null) {
+            userRequest.setPassword(encodePassword(userRequest.getPassword()));
         }
-        User user = userRepository.findById(id)
-        .orElseThrow(() -> new Exception("Can't find record with identifier: " + id));
 
+        modelMapper.map(userRequest, currentUser);
+        // if (userRequest.getRole() != null) {
+        //     currentUser.setRole(Role.valueOf(userRequest.getRole()));
+        // }
 
-        UserDTO userResponse  = modelMapper.map(user, UserDTO.class);
-        userResponse.setRole(user.getRole().name());
+        UserDTO userResponse = modelMapper.map(currentUser, UserDTO.class);
+        //userResponse.setRole(currentUser.getRole().name());
         return userResponse;
     }
 
-    public JwtResponseDTO login(AuthRequestDTO authRequestDTO) {
+    // public UserDTO getUserProfile() throws Exception {
+    //     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    //     UserDetails userDetail = (UserDetails) authentication.getPrincipal();
+    //     String username = userDetail.getUsername();
+    //     User user = userRepository.findByLogin(username)
+    //         .orElseThrow(() -> new Exception("Пользователь не найден!"));
+
+    //     UserDTO userResponse = modelMapper.map(user, UserDTO.class);
+    //     userResponse.setRole(user.getRole().name());
+    //     return userResponse;
+    // }
+
+    // public UserDTO getUserById(int id) throws Exception {
+        
+    //     if (id == 0) {
+    //         throw new IllegalArgumentException("ID не может быть нулевым");
+    //     }
+
+    //     User user = userRepository.findById(id).orElseThrow(() -> new Exception("Не удалось найти пользователя по ID: " + id));
+
+    //     UserDTO userResponse  = modelMapper.map(user, UserDTO.class);
+    //     userResponse.setRole(user.getRole().name());
+    //     return userResponse;
+    // }
+
+    public JwtResponseDTO loginUser(AuthRequestDTO authRequestDTO) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequestDTO.getLogin(), authRequestDTO.getPassword()));
         if(authentication.isAuthenticated()){
             return JwtResponseDTO
                     .builder()
                     .accessToken(jwtService.GenerateToken(authRequestDTO.getLogin()))
                     .build();
-        } else {
-            throw new UsernameNotFoundException("invalid user request!");
+        } 
+        else {
+            throw new UsernameNotFoundException("Пользователя не удалось залогинить!");
         }
     }
 
-    public String logout(HttpServletRequest request) {
+    public String logoutUser(HttpServletRequest request) {
         tokenBlacklistService.addToBlacklist(request);
-        return "Logged out successfully";
+        return "Вы успешно разлогинились!";
     }
 
     public boolean isOwnerOfRequest(int requestId, String username) {
         ConnectionRequest request = connectionRequestRepository.findById(requestId)
-            .orElseThrow(() -> new RuntimeException("Request not found"));
+            .orElseThrow(() -> new RuntimeException("Заявка " + requestId + " пользователя " + username + " не найдена!"));
         return request.getClient().getLogin().equals(username);
     }
 
+    public String encodePassword(String password) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        return encoder.encode(password);
+    }
 }

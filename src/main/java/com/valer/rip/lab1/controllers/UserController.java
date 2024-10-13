@@ -69,6 +69,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -89,22 +90,32 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @PostMapping(value = "/save")
-    public ResponseEntity saveUser(@ModelAttribute UserDTO userRequest) {
+    @PostMapping("/create")
+    public ResponseEntity<?> createUser(@ModelAttribute UserDTO userRequest) {
         try {
-            return ResponseEntity.ok(userService.saveUser(userRequest));
+            return ResponseEntity.status(HttpStatus.OK).body(userService.createUser(userRequest));
         } 
         catch (Exception e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    @PostMapping("/profile")
-    public ResponseEntity<?> getUserProfile() {
+    // @PostMapping("/profile")
+    // public ResponseEntity<?> getUserProfile() {
+    //     try {
+    //         return ResponseEntity.status(HttpStatus.OK).body(userService.getUserProfile());
+    //     } 
+    //     catch (Exception e){
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    //     }
+    // }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateUser(@ModelAttribute UserDTO userRequest) {
         try {
-            return ResponseEntity.ok().body(userService.getLoggedInUserProfile());
+            return ResponseEntity.status(HttpStatus.OK).body(userService.updateUser(userRequest));
         } 
-        catch (Exception e){
+        catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -121,9 +132,9 @@ public class UserController {
     // }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponseDTO> AuthenticateAndGetToken(@ModelAttribute AuthRequestDTO authRequestDTO){
+    public ResponseEntity<JwtResponseDTO> loginUser(@ModelAttribute AuthRequestDTO authRequestDTO){
         try {
-            return ResponseEntity.ok().body(userService.login(authRequestDTO));
+            return ResponseEntity.status(HttpStatus.OK).body(userService.loginUser(authRequestDTO));
         } 
         catch (Exception e){
             throw new RuntimeException(e);
@@ -131,8 +142,8 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
-        return ResponseEntity.ok(userService.logout(request));
+    public ResponseEntity<String> logoutUser(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.logoutUser(request));
     }
 
 }
