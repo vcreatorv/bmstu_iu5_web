@@ -78,19 +78,26 @@ import com.valer.rip.lab1.dto.JwtResponseDTO;
 import com.valer.rip.lab1.dto.UserDTO;
 import com.valer.rip.lab1.services.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 
 
 @RestController
 @RequestMapping("/api/users")
 @SecurityRequirement(name = "Bearer Authentication")
+@Tag(name="Пользователи", description="Позволяет получить информацию о клиентах провайдера")
 public class UserController {
 
     @Autowired
     UserService userService;
 
     @PostMapping("/create")
+    @Operation(
+        summary = "Регистрация пользователя",
+        description = "Позволяет зарегистрировать нового пользователя"
+    )
     public ResponseEntity<?> createUser(@ModelAttribute UserDTO userRequest) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(userService.createUser(userRequest));
@@ -111,6 +118,10 @@ public class UserController {
     // }
 
     @PutMapping("/update")
+    @Operation(
+        summary = "Изменение данных пользователя",
+        description = "Позволяет изменить данные ЛК пользователя"
+    )
     public ResponseEntity<?> updateUser(@ModelAttribute UserDTO userRequest) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(userService.updateUser(userRequest));
@@ -132,6 +143,10 @@ public class UserController {
     // }
 
     @PostMapping("/login")
+    @Operation(
+        summary = "Аутентификация пользователя",
+        description = "Позволяет пользователю залогиниться"
+    )
     public ResponseEntity<JwtResponseDTO> loginUser(@ModelAttribute AuthRequestDTO authRequestDTO){
         try {
             return ResponseEntity.status(HttpStatus.OK).body(userService.loginUser(authRequestDTO));
@@ -142,6 +157,10 @@ public class UserController {
     }
 
     @PostMapping("/logout")
+    @Operation(
+        summary = "Деавторизация пользователя",
+        description = "Позволяет пользователю разлогиниться"
+    )
     public ResponseEntity<String> logoutUser(HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.logoutUser(request));
     }

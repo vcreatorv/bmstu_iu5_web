@@ -23,11 +23,14 @@ import com.valer.rip.lab1.dto.ProviderDutyDTO;
 import com.valer.rip.lab1.models.ProviderDuty;
 import com.valer.rip.lab1.services.ProviderDutyService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/provider-duties")
 @SecurityRequirement(name = "Bearer Authentication")
+@Tag(name="Услуги провайдера", description="Позволяет получить информацию об услугах провайдера")
 public class ProviderDutiesController {
 
     private final ProviderDutyService providerDutyService;
@@ -37,6 +40,10 @@ public class ProviderDutiesController {
     }
 
     @GetMapping
+    @Operation(
+        summary = "Просмотр услуг провайдера",
+        description = "Позволяет пользователю посмотреть доступные услуги провайдера"
+    )
     public ResponseEntity<Map<String, Object>> getAllProviderDuties(@RequestParam(required = false) String title) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth != null && !(auth instanceof AnonymousAuthenticationToken) ? auth.getName() : null;
@@ -44,6 +51,10 @@ public class ProviderDutiesController {
     }
 
     @GetMapping("/{dutyID}")
+    @Operation(
+        summary = "Подробнее об услуге",
+        description = "Позволяет пользователю получить более подробную информацию об услуге провайдера"
+    )
     public ResponseEntity<?> getProviderDutyById(@PathVariable("dutyID") int dutyID) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(providerDutyService.getProviderDutyById(dutyID));
@@ -54,6 +65,10 @@ public class ProviderDutiesController {
     }
 
     @PostMapping("/create")
+    @Operation(
+        summary = "Добавление новой услуги",
+        description = "Позволяет модератору добавить новую услугу провайдера"
+    )
     @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<? extends Object> createProviderDuty(@ModelAttribute ProviderDuty providerDuty) {
         try {
@@ -78,6 +93,10 @@ public class ProviderDutiesController {
     // }
 
     @PutMapping("/{dutyID}/update")
+    @Operation(
+        summary = "Изменение услуги",
+        description = "Позволяет модератору изменить информацию об услуге"
+    )
     @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<?> updateProviderDuty(@PathVariable("dutyID") int dutyID, @ModelAttribute ProviderDutyDTO providerDutyDTO) {
         try {
@@ -90,6 +109,10 @@ public class ProviderDutiesController {
     }
 
     @DeleteMapping("{dutyID}/delete")
+    @Operation(
+        summary = "Удаление услуги",
+        description = "Позволяет модератору удалить услугу провайдера"
+    )
     @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<String> deleteProviderDuty(@PathVariable("dutyID") int dutyID) {
         try{
@@ -102,6 +125,10 @@ public class ProviderDutiesController {
     }
 
     @PostMapping("/{dutyID}/add")
+    @Operation(
+        summary = "Добавление в заявку",
+        description = "Позволяет пользователю добавить услугу в заявку"
+    )
     public ResponseEntity<?> addProviderDutyToRequest(@PathVariable("dutyID") int dutyID) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -113,6 +140,10 @@ public class ProviderDutiesController {
     }
 
     @PostMapping("/{dutyID}/image")
+    @Operation(
+        summary = "Добавление изображения услуги",
+        description = "Позволяет модератору добавить изображение для услуги"
+    )
     @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<String> addImageToProviderDuty(@PathVariable("dutyID") int dutyID, @RequestParam("file") MultipartFile file) {
         try {

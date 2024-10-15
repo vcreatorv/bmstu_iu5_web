@@ -13,11 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.valer.rip.lab1.dto.DutyRequestDTO;
 import com.valer.rip.lab1.services.DutyRequestService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/duties-requests")
 @SecurityRequirement(name = "Bearer Authentication")
+@Tag(name="Услуги в заявке", description="Позволяет изменять состав заявки")
 public class DutyRequestController {
 
     private final DutyRequestService dutyRequestService;
@@ -27,6 +30,10 @@ public class DutyRequestController {
     }
    
     @DeleteMapping("/{dutyID}/{requestID}/delete")
+    @Operation(
+        summary = "Удаление услуги из заявки",
+        description = "Позволяет пользователю удалить услугу из заявки"
+    )
     @PreAuthorize("hasAuthority('BUYER') and @userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<String> deleteProviderDutyFromConnectionRequest(@PathVariable("dutyID") int dutyID, @PathVariable("requestID") int requestID) {
         try {
@@ -49,6 +56,10 @@ public class DutyRequestController {
     //     }
     // }
     @PutMapping("/{dutyID}/{requestID}/update")
+    @Operation(
+        summary = "Изменение параметров услуги",
+        description = "Позволяет пользователю изменить поле 'количество' в услуге в заявке"
+    )
     @PreAuthorize("hasAuthority('BUYER') and @userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<?> updateAmountInDutyRequest(@PathVariable("dutyID") int dutyID, 
                                                     @PathVariable("requestID") int requestID, 

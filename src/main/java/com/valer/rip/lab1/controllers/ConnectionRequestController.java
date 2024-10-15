@@ -20,12 +20,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.valer.rip.lab1.dto.ConnectionRequestDTO;
 import com.valer.rip.lab1.services.ConnectionRequestService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 @RestController
 @RequestMapping("/api/connection-requests")
 @SecurityRequirement(name = "Bearer Authentication")
+@Tag(name="Заявки клиента провайдера", description="Позволяет получить информацию о заявках клиентов")
 public class ConnectionRequestController {
 
     private final ConnectionRequestService connectionRequestService;
@@ -35,6 +38,10 @@ public class ConnectionRequestController {
     }
 
     @GetMapping
+    @Operation(
+        summary = "Просмотр заявок клиента",
+        description = "Позволяет получить пользователю информацию о его завках, модератору - информацию о всех заявках"
+    )
     public ResponseEntity<List<ConnectionRequestDTO>> getAllConnectionRequests() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
@@ -53,6 +60,10 @@ public class ConnectionRequestController {
     }
 
     @GetMapping("/{requestID}")
+    @Operation(
+        summary = "Просмотр конкретной заявки",
+        description = "Позволяет получить пользователю информацию о его конкретной завке"
+    )
     @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER') or @userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<?> getConnectionRequestById(@PathVariable("requestID") int requestID) {
         try {
@@ -64,6 +75,10 @@ public class ConnectionRequestController {
     }
 
     @DeleteMapping("/{requestID}/delete")
+    @Operation(
+        summary = "Удаление заявки",
+        description = "Позволяет пользователю удалить его заявку"
+    )
     @PreAuthorize("hasAuthority('ADMIN') or @userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<String> deleteConnectionRequest(@PathVariable int requestID) {
         try {
@@ -75,6 +90,10 @@ public class ConnectionRequestController {
     }
 
     @PutMapping("/{requestID}/update")
+    @Operation(
+        summary = "Изменение заявки",
+        description = "Позволяет пользователю изменить поля 'Заказчик' и 'Номер для связи'"
+    )
     @PreAuthorize("@userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<?> updateConnectionRequest(@PathVariable int requestID, @ModelAttribute ConnectionRequestDTO requestDTO) {
         try {
@@ -86,6 +105,10 @@ public class ConnectionRequestController {
     }
 
     @PutMapping("/{requestID}/form")
+    @Operation(
+        summary = "Формирование заявки",
+        description = "Позволяет пользователю сформировать заявку"
+    )
     @PreAuthorize("@userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<?> formConnectionRequest(@PathVariable int requestID) {
         try {
@@ -97,6 +120,10 @@ public class ConnectionRequestController {
     }
 
     @PutMapping("/{requestID}/resolve")
+    @Operation(
+        summary = "Завершение заявки",
+        description = "Позволяет модератору отклонить или завершить заявку"
+    )
     @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
     public ResponseEntity<?> closeConnectionRequest(@PathVariable int requestID, @RequestParam("status") String status) {
         try {
