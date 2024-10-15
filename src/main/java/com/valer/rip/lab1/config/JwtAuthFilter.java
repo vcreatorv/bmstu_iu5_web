@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.valer.rip.lab1.helpers.UserDetailsServiceImpl;
+import com.valer.rip.lab1.models.User;
+import com.valer.rip.lab1.repositories.UserRepository;
 import com.valer.rip.lab1.services.JwtService;
 import com.valer.rip.lab1.services.TokenBlacklistService;
 
@@ -26,6 +28,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     TokenBlacklistService tokenBlacklistService;
@@ -46,7 +51,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(username);
-                if (jwtService.validateToken(token, userDetails) && !tokenBlacklistService.isBlacklisted(token)) {
+                User user = userRepository.findByLogin(username).orElseThrow(() -> new IOException("Пользователь не найден!"));
+                if (jwtService.validateToken(token, userDetails) && !tokenBlacklistService.isBlacklisted(token, user.getId())) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);

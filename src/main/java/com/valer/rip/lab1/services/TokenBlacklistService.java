@@ -10,24 +10,23 @@ import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Service
-public class TokenBlacklistService{
-
+public class TokenBlacklistService {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
 
     @Autowired
     private JwtService jwtService;
 
-    public void addToBlacklist(HttpServletRequest request) {
+    public void addToBlacklist(HttpServletRequest request, int userId) {
         String token = jwtService.extractTokenFromRequest(request);
         Date expiry = jwtService.extractExpiration(token);
-        // Calculate the remaining time to expiration
         long expiration = expiry.getTime() - System.currentTimeMillis();
-        redisTemplate.opsForValue().set(token, "blacklisted", expiration, TimeUnit.MILLISECONDS);
+        redisTemplate.opsForValue().set(((Integer) userId).toString(), "jwt." + token, expiration, TimeUnit.MILLISECONDS);
     }
 
-    public Boolean isBlacklisted(String token) {
-        return redisTemplate.hasKey(token);
+    public Boolean isBlacklisted(String token, int userId) {
+        String blacklistedToken = redisTemplate.opsForValue().get(((Integer) userId).toString());
+        return blacklistedToken != null && blacklistedToken.equals("jwt." + token);
     }
 }

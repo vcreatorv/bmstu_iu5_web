@@ -225,10 +225,7 @@ public class UserService {
     public JwtResponseDTO loginUser(AuthRequestDTO authRequestDTO) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequestDTO.getLogin(), authRequestDTO.getPassword()));
         if(authentication.isAuthenticated()){
-            return JwtResponseDTO
-                    .builder()
-                    .accessToken(jwtService.GenerateToken(authRequestDTO.getLogin()))
-                    .build();
+            return jwtService.GenerateToken(authRequestDTO.getLogin());
         } 
         else {
             throw new UsernameNotFoundException("Пользователя не удалось залогинить!");
@@ -236,7 +233,11 @@ public class UserService {
     }
 
     public String logoutUser(HttpServletRequest request) {
-        tokenBlacklistService.addToBlacklist(request);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetail = (UserDetails) authentication.getPrincipal();
+        String username = userDetail.getUsername();
+        int userId = userRepository.findByLogin(username).get().getId();
+        tokenBlacklistService.addToBlacklist(request, userId);
         return "Вы успешно разлогинились!";
     }
 
