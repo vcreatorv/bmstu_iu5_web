@@ -69,7 +69,7 @@ public class ProviderDutiesController {
         summary = "Добавление новой услуги",
         description = "Позволяет модератору добавить новую услугу провайдера"
     )
-    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     public ResponseEntity<? extends Object> createProviderDuty(@ModelAttribute ProviderDuty providerDuty) {
         try {
             // ProviderDuty providerDuty = providerDutyService.createProviderDuty(providerDuty);
@@ -97,7 +97,7 @@ public class ProviderDutiesController {
         summary = "Изменение услуги",
         description = "Позволяет модератору изменить информацию об услуге"
     )
-    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     public ResponseEntity<?> updateProviderDuty(@PathVariable("dutyID") int dutyID, @ModelAttribute ProviderDutyDTO providerDutyDTO) {
         try {
             ProviderDuty updatedDuty = providerDutyService.updateProviderDuty(dutyID, providerDutyDTO);
@@ -113,7 +113,7 @@ public class ProviderDutiesController {
         summary = "Удаление услуги",
         description = "Позволяет модератору удалить услугу провайдера"
     )
-    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     public ResponseEntity<String> deleteProviderDuty(@PathVariable("dutyID") int dutyID) {
         try{
             providerDutyService.deleteProviderDuty(dutyID);
@@ -129,6 +129,7 @@ public class ProviderDutiesController {
         summary = "Добавление в заявку",
         description = "Позволяет пользователю добавить услугу в заявку"
     )
+    @PreAuthorize("hasAuthority('BUYER')")
     public ResponseEntity<?> addProviderDutyToRequest(@PathVariable("dutyID") int dutyID) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -144,7 +145,7 @@ public class ProviderDutiesController {
         summary = "Добавление изображения услуги",
         description = "Позволяет модератору добавить изображение для услуги"
     )
-    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     public ResponseEntity<String> addImageToProviderDuty(@PathVariable("dutyID") int dutyID, @RequestParam("file") MultipartFile file) {
         try {
             providerDutyService.addImageToProviderDuty(dutyID, file);

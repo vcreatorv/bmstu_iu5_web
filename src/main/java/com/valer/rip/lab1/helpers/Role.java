@@ -1,9 +1,8 @@
 package com.valer.rip.lab1.helpers;
 
 public enum Role {
-    BUYER(1),
-    MANAGER(2),
-    ADMIN(3);
+    BUYER(0),
+    MANAGER(1);
 
     private final int value;
 

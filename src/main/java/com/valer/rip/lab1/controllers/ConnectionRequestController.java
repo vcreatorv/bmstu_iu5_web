@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.valer.rip.lab1.dto.ConnectionRequestDTO;
+import com.valer.rip.lab1.dto.UpdateConnectionRequestDTO;
 import com.valer.rip.lab1.services.ConnectionRequestService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,8 +50,7 @@ public class ConnectionRequestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (authentication.getAuthorities().contains(new SimpleGrantedAuthority("ADMIN")) ||
-            authentication.getAuthorities().contains(new SimpleGrantedAuthority("MANAGER"))) {
+        if (authentication.getAuthorities().contains(new SimpleGrantedAuthority("MANAGER"))) {
             return ResponseEntity.status(HttpStatus.OK).body(connectionRequestService.getAllConnectionRequests());
         } 
         else {
@@ -64,7 +64,7 @@ public class ConnectionRequestController {
         summary = "Просмотр конкретной заявки",
         description = "Позволяет получить пользователю информацию о его конкретной завке"
     )
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER') or @userService.isOwnerOfRequest(#requestID, authentication.name)")
+    @PreAuthorize("@userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<?> getConnectionRequestById(@PathVariable("requestID") int requestID) {
         try {
             ConnectionRequestDTO connectionRequest = connectionRequestService.getConnectionRequestById(requestID);
@@ -79,7 +79,7 @@ public class ConnectionRequestController {
         summary = "Удаление заявки",
         description = "Позволяет пользователю удалить его заявку"
     )
-    @PreAuthorize("hasAuthority('ADMIN') or @userService.isOwnerOfRequest(#requestID, authentication.name)")
+    @PreAuthorize("@userService.isOwnerOfRequest(#requestID, authentication.name)")
     public ResponseEntity<String> deleteConnectionRequest(@PathVariable int requestID) {
         try {
             connectionRequestService.deleteConnectionRequest(requestID);
@@ -95,7 +95,7 @@ public class ConnectionRequestController {
         description = "Позволяет пользователю изменить поля 'Заказчик' и 'Номер для связи'"
     )
     @PreAuthorize("@userService.isOwnerOfRequest(#requestID, authentication.name)")
-    public ResponseEntity<?> updateConnectionRequest(@PathVariable int requestID, @ModelAttribute ConnectionRequestDTO requestDTO) {
+    public ResponseEntity<?> updateConnectionRequest(@PathVariable int requestID, @ModelAttribute UpdateConnectionRequestDTO requestDTO) {
         try {
             ConnectionRequestDTO updatedRequest = connectionRequestService.updateConnectionRequest(requestID, requestDTO);
             return ResponseEntity.status(HttpStatus.OK).body(updatedRequest);
@@ -124,7 +124,7 @@ public class ConnectionRequestController {
         summary = "Завершение заявки",
         description = "Позволяет модератору отклонить или завершить заявку"
     )
-    @PreAuthorize("hasAnyAuthority('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGER')")
     public ResponseEntity<?> closeConnectionRequest(@PathVariable int requestID, @RequestParam("status") String status) {
         try {
             ConnectionRequestDTO closedRequest = connectionRequestService.closeConnectionRequest(requestID, status);

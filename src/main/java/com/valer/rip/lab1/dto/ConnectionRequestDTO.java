@@ -22,7 +22,7 @@ public class ConnectionRequestDTO {
     private LocalDateTime formationDatetime;
     private LocalDateTime completionDatetime;
     private Integer totalPrice;
-    private String manager; // Changed from User to String
-    private String client;  // Changed from User to String
+    private String manager; 
+    private String client;
     private List<ProviderDutyDTO> duties;
 }
